@@ -6,12 +6,8 @@ const Company = dataBase.Company;
 const cache = require('./cache')
 const iconv = require('iconv-lite')
 const toReadableStockPageInfo = require('./toReadableStockPageInfo')
-let tickerToIgnore = ['FIGE3', 'COCE6'];
-
-// todo filtrar por tagalong 100%
 
 getRevenue = async ({ticker}) => {
-    
     let response = await fetch(`https://statusinvest.com.br/acao/getrevenue?code=${ticker}&type=2&viewType=0`, {
         headers: {
             accept: '*/*',
@@ -75,7 +71,7 @@ getStocksInfo()
                 const wasProfitNegative = checkIfItHasNegativeProfitInTheLast10Years(result);
                 getStockPageInfo({ticker: item.ticker})
                   .then((stockPageInfo) => {
-                    if ((stockPageInfo.tagAlong === '100 %' || stockPageInfo.tagAlong === '80 %')  && !wasProfitNegative && !tickerToIgnore.includes(item.ticker)) {
+                    if ((stockPageInfo.tagAlong === '100 %' || stockPageInfo.tagAlong === '80 %')  && !wasProfitNegative) {
                       let vi = Math.sqrt(22.5 * item.lpa * item.vpa);
                       item.vi = vi;
                       item.percent_more = ((vi - item.price) / item.price) * 100
