@@ -37,13 +37,13 @@ app.use((req, res, next) => {
 app.post('/api/companies/updateFavorite', async (req, res) => {
 
     try {
-        const companyid = req.query.companyid;
+        const ticker = req.query.ticker;
         if (req.query.favorite === 'true') {
-            await Favorite.create({ companyid });
+            await Favorite.create({ ticker });
         } else {
             Favorite.destroy({
                 where: {
-                    companyid
+                    ticker
                 },
               });
         }
@@ -64,14 +64,13 @@ app.get('/api/companies', async (req, res) => {
     })
     const favorites = await Favorite.findAll(); 
     favorites.forEach(favorite => {
-        const companyToUpdate = companiesDto.find(company => company.companyid === favorite.companyid);
+        const companyToUpdate = companiesDto.find(company => company.ticker === favorite.ticker);
         if (companyToUpdate) {
             companyToUpdate.favorite = true;
         }
     })
     // Sort the companiesDto array by percent_more in descending order
     companiesDto.sort((a, b) => b.percent_more - a.percent_more);
-
     res.json(companiesDto);
 });
   

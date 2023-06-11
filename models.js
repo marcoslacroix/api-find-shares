@@ -184,8 +184,8 @@ const favorite = {
     type: Sequelize.INTEGER,
     primaryKey: true
   },
-  companyid: {
-    type: Sequelize.INTEGER,
+  ticker: {
+    type: Sequelize.STRING,
     allowNull: true,
   },
 }
