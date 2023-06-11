@@ -34,6 +34,27 @@ app.use((req, res, next) => {
   next();
 });
 
+app.post('/api/companies/updateFavorite', async (req, res) => {
+
+    try {
+        const companyid = req.query.companyid;
+        if (req.query.favorite === 'true') {
+            await Favorite.create({ companyid });
+        } else {
+            Favorite.destroy({
+                where: {
+                    companyid
+                },
+              });
+        }
+        res.send('Favorite status updated');
+    } catch (error) {
+        console.error('An error occurred while updating favorite status:', error);
+        res.status(500).send('Internal Server Error');
+    }
+
+})
+
 // Rota GET
 app.get('/api/companies', async (req, res) => {
     const companies = await Company.findAll();
@@ -48,6 +69,9 @@ app.get('/api/companies', async (req, res) => {
             companyToUpdate.favorite = true;
         }
     })
+    // Sort the companiesDto array by percent_more in descending order
+    companiesDto.sort((a, b) => b.percent_more - a.percent_more);
+
     res.json(companiesDto);
 });
   
