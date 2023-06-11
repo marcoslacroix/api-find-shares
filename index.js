@@ -3,7 +3,12 @@ const axios = require('axios')
 let companies = [];
 const dataBase = require('./data-base');
 const Company = dataBase.Company;
+const cache = require('./cache')
+const iconv = require('iconv-lite')
+const toReadableStockPageInfo = require('./toReadableStockPageInfo')
 let tickerToIgnore = ['FIGE3', 'COCE6'];
+
+// todo filtrar por tagalong 100%
 
 getRevenue = async ({ticker}) => {
     
@@ -23,6 +28,19 @@ getRevenue = async ({ticker}) => {
           },
       })
       return response.json();
+}
+
+const getStockPageInfo = async ({ ticker }) => {
+  const response = await fetch(`https://statusinvest.com.br/acoes/${ticker}`, {
+    headers: {
+      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+      'accept-language': 'en,en-US;q=0.9,pt-BR;q=0.8,pt;q=0.7,es-MX;q=0.6,es;q=0.5'
+    }
+  })
+  const responseBuffer = await response.buffer()
+  const html = iconv.encode(responseBuffer, 'utf8').toString('utf8')
+
+  return toReadableStockPageInfo(html);
 }
 
 const getStocksInfo = async () => {
@@ -48,21 +66,27 @@ const getStocksInfo = async () => {
 
 getStocksInfo()
   .then((results) => {
+    console.log("Starting progress...")
     const promises = results.map((item, i) => {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
             getRevenue({ ticker: item.ticker })
               .then((result) => {
                 const wasProfitNegative = checkIfItHasNegativeProfitInTheLast10Years(result);
-                if (!wasProfitNegative && !tickerToIgnore.includes(item.ticker)) {
-                    let vi = Math.sqrt(22.5 * item.lpa * item.vpa);
-                    item.vi = vi;
-                    item.percent_more = ((vi - item.price) / item.price) * 100
-                    if (item.price < vi) {
-                      companies.push(item);
-                    }
+                getStockPageInfo({ticker: item.ticker})
+                  .then((stockPageInfo) => {
+                    if ((stockPageInfo.tagAlong === '100 %' || stockPageInfo.tagAlong === '80 %')  && !wasProfitNegative && !tickerToIgnore.includes(item.ticker)) {
+                      let vi = Math.sqrt(22.5 * item.lpa * item.vpa);
+                      item.vi = vi;
+                      item.percent_more = ((vi - item.price) / item.price) * 100
+                      item.tagAlong = stockPageInfo.tagAlong;
+                      if (item.price < vi) {
+                        companies.push(item);
+                      }
                 }
                 resolve("teste");
+                })
+                
               })
               .catch((error) => {
                 console.error('An error has occurred: ', error);
@@ -78,18 +102,18 @@ getStocksInfo()
         where: {},
       })
       .then((rowsDeleted) => {
-        console.log(`${rowsDeleted} registros deletados.`);
       })
       .catch((error) => {
         console.error('An error has occurred to delete:', error);
       })
 
       Company.bulkCreate(companies).then(() => {
-
       })
       .catch((error) => {
         console.error('An error has occurred to insert:', error);
       });
+
+      console.log("Process end.");
       
     });
   })

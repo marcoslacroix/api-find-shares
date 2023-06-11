@@ -29,6 +29,10 @@ const company = {
     type: Sequelize.FLOAT,
     allowNull: false
   },
+  tagAlong: {
+    type: Sequelize.STRING,
+    allowNull: true
+  },
   p_vp: {
     type: Sequelize.FLOAT,
     allowNull: false
