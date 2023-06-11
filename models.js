@@ -179,5 +179,16 @@ const company = {
 
 }
 
+const favorite = {
+  id: {
+    type: Sequelize.INTEGER,
+    primaryKey: true
+  },
+  companyid: {
+    type: Sequelize.INTEGER,
+    allowNull: true,
+  },
+}
 
-module.exports = {company};
+
+module.exports = {company, favorite};

@@ -2,7 +2,30 @@ const express = require('express');
 const app = express();
 const dataBase = require('./data-base');
 const Company = dataBase.Company;
+const Favorite = dataBase.Favorite;
 
+class CompanyDTO {
+    constructor(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname) {
+        this.companyid = companyid;
+        this.companyname = companyName;
+        this.ticker = ticker;
+        this.price = price;
+        this.vi = vi;
+        this.price = price;
+        this.dy = dy;
+        this.percent_more = percent_more;
+        this.tagAlong = tagAlong;
+        this.subsectorname = subsectorname;
+        this.segmentname = segmentname;
+        this.sectorname = sectorname;
+    }
+}
+
+function parseCompanyDTO(data) {
+    const { companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname} = data;
+    return new CompanyDTO(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname);
+}
+  
 // Enable CORS for all routes
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,7 +37,18 @@ app.use((req, res, next) => {
 // Rota GET
 app.get('/api/companies', async (req, res) => {
     const companies = await Company.findAll();
-    res.json(companies);
+    let companiesDto = []
+    companies.forEach(it => {
+        companiesDto.push(parseCompanyDTO(it));
+    })
+    const favorites = await Favorite.findAll(); 
+    favorites.forEach(favorite => {
+        const companyToUpdate = companiesDto.find(company => company.companyid === favorite.companyid);
+        if (companyToUpdate) {
+            companyToUpdate.favorite = true;
+        }
+    })
+    res.json(companiesDto);
 });
   
 // Iniciar o servidor
