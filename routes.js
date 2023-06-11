@@ -22,8 +22,8 @@ class CompanyDTO {
 }
 
 function parseCompanyDTO(data) {
-    const { companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname} = data;
-    return new CompanyDTO(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname);
+    const { companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname} = data;
+    return new CompanyDTO(companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname);
 }
   
 // Enable CORS for all routes
