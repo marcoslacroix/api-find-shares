@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const sequelize = require('sequelize');
 const dataBase = require('./data-base');
 const Company = dataBase.Company;
 const Favorite = dataBase.Favorite;
@@ -53,6 +54,14 @@ app.post('/api/companies/updateFavorite', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 
+})
+
+app.get("/api/companies/sector", async (req, resp) => {
+    const sector = await Company.findAll({
+        attributes: [sequelize.fn('DISTINCT', sequelize.col('sectorname')), 'sectorname'],
+    });
+    
+    resp.json(sector);
 })
 
 // Rota GET
