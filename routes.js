@@ -65,14 +65,22 @@ app.get("/api/companies/sector", async (req, resp) => {
     resp.json(sector);
 })
 
+
+
+  
+
 // Rota GET
 app.get('/api/companies', async (req, res) => {
     const companies = await Company.findAll({
-        order: [['percent_more', 'desc']],
-        attributes: [sequelize.fn('DISTINCT', sequelize.col('companyname')), ...Object.keys(Company.rawAttributes)],
+        order: [[sequelize.literal('percent_more'), 'DESC']]
     });
-    const companiesDto = companies.map(parseCompanyDTO);
+    
+    companiesWithoutDuplicate = companies.filter((company, index, self) =>
+        index === self.findIndex((c) => c.companyname === company.companyname)
+    );
 
+    const companiesDto = companiesWithoutDuplicate.map(parseCompanyDTO);
+    
     const favorites = await Favorite.findAll(); 
     favorites.forEach(favorite => {
         const companyToUpdate = companiesDto.find(company => company.ticker === favorite.ticker);
