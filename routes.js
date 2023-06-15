@@ -6,7 +6,7 @@ const Company = dataBase.Company;
 const Favorite = dataBase.Favorite;
 
 class CompanyDTO {
-    constructor(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname) {
+    constructor(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado) {
         this.companyid = companyid;
         this.companyname = companyName;
         this.ticker = ticker;
@@ -19,12 +19,13 @@ class CompanyDTO {
         this.subsectorname = subsectorname;
         this.segmentname = segmentname;
         this.sectorname = sectorname;
+        this.valormercado = valormercado
     }
 }
 
 function parseCompanyDTO(data) {
-    const { companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname} = data;
-    return new CompanyDTO(companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname);
+    const { companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado} = data;
+    return new CompanyDTO(companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado);
 }
   
 // Enable CORS for all routes
