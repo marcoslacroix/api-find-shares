@@ -66,11 +66,12 @@ app.get("/api/companies/sector", async (req, resp) => {
 
 // Rota GET
 app.get('/api/companies', async (req, res) => {
-    const companies = await Company.findAll();
-    let companiesDto = []
-    companies.forEach(it => {
-        companiesDto.push(parseCompanyDTO(it));
-    })
+    const companies = await Company.findAll({
+        order: [['percent_more', 'desc']],
+        attributes: [sequelize.fn('DISTINCT', sequelize.col('companyname')), ...Object.keys(Company.rawAttributes)],
+    });
+    const companiesDto = companies.map(parseCompanyDTO);
+
     const favorites = await Favorite.findAll(); 
     favorites.forEach(favorite => {
         const companyToUpdate = companiesDto.find(company => company.ticker === favorite.ticker);
@@ -78,8 +79,7 @@ app.get('/api/companies', async (req, res) => {
             companyToUpdate.favorite = true;
         }
     })
-    // Sort the companiesDto array by percent_more in descending order
-    companiesDto.sort((a, b) => b.percent_more - a.percent_more);
+   
     res.json(companiesDto);
 });
   
