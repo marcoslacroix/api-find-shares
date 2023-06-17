@@ -3,9 +3,36 @@ const axios = require('axios')
 let companies = [];
 const dataBase = require('./data-base');
 const Company = dataBase.Company;
+const CompanyHistoric = dataBase.CompanyHistoric;
 const cache = require('./cache')
 const iconv = require('iconv-lite')
 const toReadableStockPageInfo = require('./toReadableStockPageInfo')
+
+
+// todo buscar EBIT 
+// https://statusinvest.com.br/acao/getdre?code=abcb4&type=0&futureData=false
+//const valor = dataObj.data.grid[7].columns[1].value;
+//console.log(valor); 
+
+getEbitValue = async ({ticker}) => {
+  let response = await fetch(`https://statusinvest.com.br/acao/getdre?code=${ticker}&type=0&futureData=false`, {
+        headers: {
+            accept: '*/*',
+            'accept-language': 'en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7,es-MX;q=0.6,es;q=0.5',
+            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'x-requested-with': 'XMLHttpRequest',
+            'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="97", "Chromium";v="97"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"macOS"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)'
+          },
+      })
+      return response.json();
+}
+
 
 getRevenue = async ({ticker}) => {
     let response = await fetch(`https://statusinvest.com.br/acao/getrevenue?code=${ticker}&type=2&viewType=0`, {
@@ -72,13 +99,28 @@ getStocksInfo()
                 getStockPageInfo({ticker: item.ticker})
                   .then((stockPageInfo) => {
                     if ((stockPageInfo.tagAlong === '100 %' || stockPageInfo.tagAlong === '80 %')  && !wasProfitNegative) {
-                      let vi = Math.sqrt(22.5 * item.lpa * item.vpa);
-                      item.vi = vi;
-                      item.percent_more = ((vi - item.price) / item.price) * 100
-                      item.tagAlong = stockPageInfo.tagAlong;
-                      if (item.price < vi) {
-                        companies.push(item);
-                      }
+                      getEbitValue({ticker: item.ticker})
+                        .then((response) => {
+                          let stringEbit = response?.data?.grid[7]?.columns[1]?.value;
+                          let ebit = 0;
+                          if (stringEbit.includes('M')) {
+                            ebit = parseFloat(stringEbit.replace('.', '').replace(',', '.')) * 1000000;
+                          } else if (stringEbit.includes('B')) {
+                            ebit = parseFloat(stringEbit.replace(/\./g, '').replace(',', '.')) * 1000000000;
+                          } else {
+                            ebit = parseFloat(stringEbit.replace(/\./g, '').replace(',', '.'));
+                          }
+  
+                        let vi = Math.sqrt(22.5 * item.lpa * item.vpa);
+                        item.vi = vi;
+                        item.percent_more = ((vi - item.price) / item.price) * 100
+                        item.tagAlong = stockPageInfo.tagAlong;
+                        item.earningYield = (ebit / stockPageInfo['Valor de firma']) * 100
+                        if (item.price < vi) {
+                          companies.push(item);
+                        }
+                      })
+                      
                 }
                 resolve("teste");
                 })
@@ -92,7 +134,20 @@ getStocksInfo()
       });
     });
 
-    Promise.all(promises).then(() => {
+    Promise.all(promises).then(async () => {
+
+      const companyHistoric = await CompanyHistoric.findAll({});
+
+      companies.forEach(it => {
+        const ticker = it.ticker;
+        const isTickerOnHistoric = companyHistoric.some(companyHistoric => companyHistoric.ticker === ticker);
+        if(!isTickerOnHistoric) {
+          CompanyHistoric.create({
+            ticker
+          })
+        }
+      })
+      
 
       Company.destroy({
         where: {},

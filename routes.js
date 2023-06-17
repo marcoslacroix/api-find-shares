@@ -6,7 +6,7 @@ const Company = dataBase.Company;
 const Favorite = dataBase.Favorite;
 
 class CompanyDTO {
-    constructor(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado) {
+    constructor(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado, earningYield) {
         this.companyid = companyid;
         this.companyname = companyName;
         this.ticker = ticker;
@@ -20,12 +20,13 @@ class CompanyDTO {
         this.segmentname = segmentname;
         this.sectorname = sectorname;
         this.valormercado = valormercado
+        this.earningYield = earningYield;
     }
 }
 
 function parseCompanyDTO(data) {
-    const { companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado} = data;
-    return new CompanyDTO(companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado);
+    const { companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado, earningYield} = data;
+    return new CompanyDTO(companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado, earningYield);
 }
   
 // Enable CORS for all routes
@@ -66,13 +67,10 @@ app.get("/api/companies/sector", async (req, resp) => {
 })
 
 
-
-  
-
 // Rota GET
 app.get('/api/companies', async (req, res) => {
     const companies = await Company.findAll({
-        order: [[sequelize.literal('percent_more'), 'DESC']]
+        order: [[sequelize.literal('earningYield'), 'DESC']]
     });
     
     companiesWithoutDuplicate = companies.filter((company, index, self) =>

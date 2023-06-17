@@ -175,6 +175,10 @@ const company = {
   percent_more: {
     type: Sequelize.FLOAT,
     allowNull: false
+  },
+  earningYield: {
+    type: Sequelize.FLOAT,
+    allowNull: true
   }
 
 }
@@ -190,5 +194,16 @@ const favorite = {
   },
 }
 
+const companyHistoric = {
+  id: {
+    type: Sequelize.INTEGER,
+    primaryKey: true
+  },
+  ticker: {
+    type: Sequelize.STRING,
+    allowNull: true,
+  },
+}
 
-module.exports = {company, favorite};
+
+module.exports = {company, favorite, companyHistoric};
