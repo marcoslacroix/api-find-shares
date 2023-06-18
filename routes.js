@@ -2,32 +2,13 @@ const express = require('express');
 const app = express();
 const sequelize = require('sequelize');
 const dataBase = require('./data-base');
-const Company = dataBase.Company;
+const BrazilCompany = dataBase.BrazilCompany;
+const AmericanCompany = dataBase.AmericanCompany;
+const RealEstateFunds = dataBase.RealEstateFunds;
 const Favorite = dataBase.Favorite;
-
-class CompanyDTO {
-    constructor(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado, earningYield) {
-        this.companyid = companyid;
-        this.companyname = companyName;
-        this.ticker = ticker;
-        this.price = price;
-        this.vi = vi;
-        this.price = price;
-        this.dy = dy;
-        this.percent_more = percent_more;
-        this.tagAlong = tagAlong;
-        this.subsectorname = subsectorname;
-        this.segmentname = segmentname;
-        this.sectorname = sectorname;
-        this.valormercado = valormercado
-        this.earningYield = earningYield;
-    }
-}
-
-function parseCompanyDTO(data) {
-    const { companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado, earningYield} = data;
-    return new CompanyDTO(companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, segmentname, sectorname, valormercado, earningYield);
-}
+const CompanyDto = require('./brazilCompanyDto');
+const RealStateFundsDto = require('./realStateFundsDto');
+const AmericanCompanyDto = require('./americanCompanyDto');
   
 // Enable CORS for all routes
 app.use((req, res, next) => {
@@ -58,8 +39,8 @@ app.post('/api/companies/updateFavorite', async (req, res) => {
 
 })
 
-app.get("/api/companies/sector", async (req, resp) => {
-    const sector = await Company.findAll({
+app.get("/api/brazil-company/sector", async (req, resp) => {
+    const sector = await BrazilCompany.findAll({
         attributes: [sequelize.fn('DISTINCT', sequelize.col('sectorname')), 'sectorname'],
     });
     
@@ -67,17 +48,48 @@ app.get("/api/companies/sector", async (req, resp) => {
 })
 
 
-// Rota GET
-app.get('/api/companies', async (req, res) => {
-    const companies = await Company.findAll({
+app.get('/api/fetch/real-state-funds', async (req, res) => {
+    const companies = await RealEstateFunds.findAll({
+        order: [[sequelize.literal('magicNumber'), 'ASC']]
+    });
+    
+    const companiesDto = companies.map(RealStateFundsDto.parseRealStateFundsDto);
+    
+    const favorites = await Favorite.findAll(); 
+    favorites.forEach(favorite => {
+        const companyToUpdate = companiesDto.find(company => company.ticker === favorite.ticker);
+        if (companyToUpdate) {
+            companyToUpdate.favorite = true;
+        }
+    })
+   
+    res.json(companiesDto);
+});
+  
+app.get('/api/fetch/american-company', async (req, res) => {
+    const companies = await AmericanCompany.findAll({
         order: [[sequelize.literal('earningYield'), 'DESC']]
     });
     
-    companiesWithoutDuplicate = companies.filter((company, index, self) =>
-        index === self.findIndex((c) => c.companyname === company.companyname)
-    );
+    const companiesDto = companies.map(AmericanCompanyDto.parseAmericanCompanyDto);
+    
+    const favorites = await Favorite.findAll(); 
+    favorites.forEach(favorite => {
+        const companyToUpdate = companiesDto.find(company => company.ticker === favorite.ticker);
+        if (companyToUpdate) {
+            companyToUpdate.favorite = true;
+        }
+    })
+   
+    res.json(companiesDto);
+});
 
-    const companiesDto = companiesWithoutDuplicate.map(parseCompanyDTO);
+app.get('/api/fetch/brazil-company', async (req, res) => {
+    const companies = await BrazilCompany.findAll({
+        order: [[sequelize.literal('earningYield'), 'DESC']]
+    });
+    
+    const companiesDto = companies.map(CompanyDto.parseBrazilCompanyDTO);
     
     const favorites = await Favorite.findAll(); 
     favorites.forEach(favorite => {
