@@ -24,6 +24,7 @@
     "node-fetch": "2.6.1",
     "node-localdb": "^0.0.3",
     "sequelize": "^6.32.0",
+    "supertest": "^6.3.3",
     "underscore": "^1.13.6"
   },
   "devDependencies": {

@@ -38,8 +38,8 @@ const createUserSchema = Joi.object({
 });
 
 app.post('/create-user', async (req, res)  => {
-  try {
-    const { error, value } = createUserSchema.validate(req.body);
+    try {
+        const { error, value } = createUserSchema.validate(req.body);
     if (error) {
         const errorMessage = error.details[0].message;
         res.status(400).json({ mensagem: errorMessage });
@@ -50,8 +50,8 @@ app.post('/create-user', async (req, res)  => {
 
     const user = await User.findOne({ where: { email } });
     if (user) {
-      res.status(400).json({ mensagem: 'User already registered' });
-      return;
+        res.status(400).json({ mensagem: 'User already registered' });
+        return;
     }
 
     const encryptedPwd = await functionUtils.encryptPassword(password);
@@ -191,7 +191,8 @@ app.get('/api/fetch/brazil-company', verificarToken, async (req, res) => {
     res.json(companiesDto);
 });
   
-// Iniciar o servidor
-app.listen(process.env.PORT, () => {
+const server = app.listen(process.env.PORT, () => {
     console.log(`Servidor iniciado na porta ${process.env.PORT}`);
 });
+
+module.exports = server;
