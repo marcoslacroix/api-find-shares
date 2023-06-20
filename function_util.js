@@ -3,6 +3,7 @@ const axios = require('axios')
 let companies = [];
 const dataBase = require('./data-base');
 const Company = dataBase.Company;
+const bcrypt = require('bcrypt');
 const CompanyHistoric = dataBase.CompanyHistoric;
 const cache = require('./cache')
 const iconv = require('iconv-lite')
@@ -81,6 +82,18 @@ const getProvents = async ({companyName, url, ticker}) => {
         headers: getHeaders(),
     })
     return response.json();
+}
+
+async function encryptPassword(password) {
+    try {
+      const saltRounds = 10;
+      const salt = await bcrypt.genSalt(saltRounds);
+      const hash = await bcrypt.hash(password, salt);
+      return hash;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
 }
 
 function calculateMedianaValue(result) {
@@ -220,6 +233,7 @@ module.exports = {
     getEbitValueByCompanyId,
     getProvents,
     isInvalidProvents,
-    calculateMedianaValue
+    calculateMedianaValue,
+    encryptPassword
 };
     

@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const sequelize = require('sequelize');
+const functionUtils = require('./function_util');
 const dataBase = require('./data-base');
 const BrazilCompany = dataBase.BrazilCompany;
 const AmericanCompany = dataBase.AmericanCompany;
@@ -14,7 +15,7 @@ const AmericanCompanyDto = require('./americanCompanyDto');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-
+const Joi = require('joi');
 
 
   
@@ -29,62 +30,59 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 
 
-app.post('/create-user', async (req, res)  => {
-    const {email, password, name, lastName} = req.body;
-    if (email === "" || !email) {
-        res.status(400).json({ mensagem: 'E-mail required' });
-    } else if (password === "" || !password) {
-        res.status(400).json({ mensagem: 'Password required' });
-    } else if (name === "" || !name) {
-        res.status(400).json({ mensagem: 'Name required' });
-    } else if (lastName === "" || !lastName) {
-        res.status(400 ).json({ mensagem: 'Last name required' });
-    }
-
-    const user = await User.findOne({
-        where: {
-            email: email  
-        } 
-    })
-
-    if (user) {
-        res.status(400 ).json({ mensagem: 'User already registered' });
-    }
-    
-
-    const encryptedPwd = await encryptPassword(password); 
-
-    await User.create({
-        email,
-        password: encryptedPwd,
-        name,
-        last_name: lastName
-    })
-
-    res.send("User created!");
+const createUserSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().required(),
+  name: Joi.string().required(),
+  lastName: Joi.string().required()
 });
 
-async function encryptPassword(password) {
-    try {
-      const saltRounds = 10;
-      const salt = await bcrypt.genSalt(saltRounds);
-      const hash = await bcrypt.hash(password, salt);
-      return hash;
-    } catch (error) {
-      console.error(error);
-      throw error;
+app.post('/create-user', async (req, res)  => {
+  try {
+    const { error, value } = createUserSchema.validate(req.body);
+    if (error) {
+        const errorMessage = error.details[0].message;
+        res.status(400).json({ mensagem: errorMessage });
+        return;
     }
-  }
 
-app.post('/login', (req, res)  => {
-    const {email, password} = req.body;
-    // Verifique se as credenciais estão corretas (exemplo fictício)
-    if (email === 'teste' && password === 'teste') {
-        const token = jwt.sign({ email: email }, process.env.SECRET_KEY);
-        res.json({ token: token });
-    } else {
-        res.status(401).json({ mensagem: 'Credenciais inválidas' });
+    const { email, password, name, lastName } = value;
+
+    const user = await User.findOne({ where: { email } });
+    if (user) {
+      res.status(400).json({ mensagem: 'User already registered' });
+      return;
     }
+
+    const encryptedPwd = await functionUtils.encryptPassword(password);
+
+    await User.create({
+      email,
+      password: encryptedPwd,
+      name,
+      last_name: lastName
+    });
+
+    res.send("User created!");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+
+app.get('/login', async (req, res)  => {
+    const {email, password} = req.body;
+    const user = await User.findOne({ where: { email } });
+    if (user) {
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+        if (email === user.email && isPasswordMatch) {
+          const token = jwt.sign({ email: email }, process.env.SECRET_KEY);
+          res.json({ token: token });
+          return;
+        }
+      }
+      res.status(401).json({ mensagem: 'Credenciais inválidas' });
 });
 
 function verificarToken(req, res, next) {
