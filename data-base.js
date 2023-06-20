@@ -21,9 +21,12 @@ const RealEstateFunds = db.define('real_estate_funds', models.realEstateFunds, {
 const Favorite = db.define('favorite', models.favorite, {
     freezeTableName: true
 });
+const User = db.define('user', models.user, {
+    freezeTableName: true
+});
 const CompanyHistoric = db.define('company_historic', models.companyHistoric, {
     freezeTableName: true,
     tableName: 'company_historic'
 });
 
-module.exports = {BrazilCompany, Favorite, CompanyHistoric, AmericanCompany, RealEstateFunds}
+module.exports = {BrazilCompany, Favorite, CompanyHistoric, AmericanCompany, RealEstateFunds, User}

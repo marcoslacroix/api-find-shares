@@ -66,7 +66,6 @@ const getCompanyGeneralInfo = ({ html, stockInfo }) => {
 
 const getTagAlong = ({html, stockInfo}) => {
   const $ = cheerio.load(html);
-  const fs = require('fs');
 
   const tagAlongSelector = $('.sub-value:contains("Tag Along")');
   if (tagAlongSelector.length > 0) {

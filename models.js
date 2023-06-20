@@ -344,7 +344,7 @@ const realEstateFunds = {
     type: Sequelize.STRING,
     allowNull: false
   },
-  segmentname: {
+  segment: {
     type: Sequelize.STRING,
     allowNull: false
   },
@@ -372,6 +372,37 @@ const realEstateFunds = {
     allowNull: true
   }
 
+}
+
+const user = {
+  id: {
+    type: Sequelize.INTEGER,
+    primaryKey: true
+  },
+  name: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+  last_name: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+  password: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+  createdAt: {
+    type: Sequelize.DATE,
+    allowNull: false
+  },
+  updatedAt: {
+    type: Sequelize.DATE,
+    allowNull: false
+  },
+  email: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
 }
 
 
@@ -581,4 +612,4 @@ const companyHistoric = {
 }
 
 
-module.exports = {brazilCompany, favorite, companyHistoric, americanCompany, realEstateFunds};
+module.exports = {brazilCompany, favorite, companyHistoric, americanCompany, realEstateFunds, user};
