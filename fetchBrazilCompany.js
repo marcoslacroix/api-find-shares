@@ -24,7 +24,7 @@ functionUtils.getStocksInfo(urlGetStocksInfo).then((results) => {
                           item.percent_more = ((vi - item.price) / item.price) * 100
                           item.tagAlong = stockPageInfo.tagAlong;
                           item.earningYield = (ebit / stockPageInfo['Valor de firma']) * 100
-                          if (item.price < vi) {
+                          if (item.price < vi && item.earningYield > 0) {
                             companies.push(item);
                           }
                       })
