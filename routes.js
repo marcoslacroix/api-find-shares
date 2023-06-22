@@ -71,7 +71,7 @@ app.post('/create-user', async (req, res)  => {
 });
 
 
-app.get('/login', async (req, res)  => {
+app.post('/api/login', async (req, res)  => {
     const {email, password} = req.body;
     const user = await User.findOne({ where: { email } });
     if (user) {
