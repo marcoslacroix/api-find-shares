@@ -37,12 +37,12 @@ const createUserSchema = Joi.object({
   lastName: Joi.string().required()
 });
 
-app.post('/create-user', async (req, res)  => {
+app.post('/api/create-user', async (req, res)  => {
     try {
         const { error, value } = createUserSchema.validate(req.body);
     if (error) {
         const errorMessage = error.details[0].message;
-        res.status(400).json({ mensagem: errorMessage });
+        res.status(400).json({ message: errorMessage });
         return;
     }
 
@@ -50,7 +50,7 @@ app.post('/create-user', async (req, res)  => {
 
     const user = await User.findOne({ where: { email } });
     if (user) {
-        res.status(400).json({ mensagem: 'User already registered' });
+        res.status(400).json({ message: 'User already registered' });
         return;
     }
 
@@ -82,7 +82,7 @@ app.post('/api/login', async (req, res)  => {
           return;
         }
       }
-      res.status(401).json({ mensagem: 'Credenciais inválidas' });
+      res.status(401).json({ message: 'Credenciais inválidas' });
 });
 
 function verificarToken(req, res, next) {
@@ -94,12 +94,12 @@ function verificarToken(req, res, next) {
     }
   
     if (!token) {
-        return res.status(401).json({ mensagem: 'Token não fornecido' });
+        return res.status(401).json({ message: 'Token não fornecido' });
     }
   
     jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
         if (err) {
-            return res.status(403).json({ mensagem: 'Token inválido' });
+            return res.status(403).json({ message: 'Token inválido' });
         }
   
         req.user = decoded;
