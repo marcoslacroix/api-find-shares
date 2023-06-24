@@ -10,6 +10,7 @@ const RealEstateFunds = dataBase.RealEstateFunds;
 const User = dataBase.User;
 const Favorite = dataBase.Favorite;
 const CompanyDto = require('./brazilCompanyDto');
+const UserDto = require('./userDto');
 const RealStateFundsDto = require('./realStateFundsDto');
 const AmericanCompanyDto = require('./americanCompanyDto');
 const bodyParser = require('body-parser');
@@ -48,7 +49,8 @@ app.post('/api/create-user', async (req, res)  => {
 
     const { email, password, name, lastName } = value;
 
-    const user = await User.findOne({ where: { email } });
+    const user = await getUserByEmail(email);
+
     if (user) {
         res.status(400).json({ message: 'User already registered' });
         return;
@@ -70,6 +72,7 @@ app.post('/api/create-user', async (req, res)  => {
   }
 });
 
+// todo deletar account
 
 app.post('/api/login', async (req, res)  => {
     const {email, password} = req.body;
@@ -86,7 +89,7 @@ app.post('/api/login', async (req, res)  => {
 });
 
 function verificarToken(req, res, next) {
-    const authorizationHeader  = req.headers['authorization'];
+    const authorizationHeader  = getTokenFromHeader(req);
     let token = "";
 
     if (authorizationHeader) {
@@ -171,6 +174,30 @@ app.get('/api/fetch/american-company', verificarToken, async (req, res) => {
     })
    
     res.json(companiesDto);
+});
+
+async function getUserByEmail(email) {
+    try {
+        return await User.findOne({
+          where: {
+            email: email
+          }
+        });
+    } catch (error) {
+        console.error('Error finding user by email:', error);
+        throw error;
+    }
+}
+
+function getTokenFromHeader(req) {
+    return req.headers['authorization'];
+}
+
+app.get('/api/get-user', verificarToken, async (req, resp) => {
+    const token = getTokenFromHeader(req).replace('Bearer ', '');
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const user = await getUserByEmail(decoded.email);
+    resp.json(UserDto.parseUserDto(user));
 });
 
 app.get('/api/fetch/brazil-company', verificarToken, async (req, res) => {

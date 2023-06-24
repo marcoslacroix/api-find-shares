@@ -1,5 +1,5 @@
 class BrazilCompanyDTO {
-    constructor(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, sectorname, valormercado, earningYield) {
+    constructor(companyid, companyName, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, sectorname, valormercado, earningYield, segmentname) {
         this.companyid = companyid;
         this.companyname = companyName;
         this.ticker = ticker;
@@ -13,12 +13,13 @@ class BrazilCompanyDTO {
         this.sectorname = sectorname;
         this.valormercado = valormercado
         this.earningYield = earningYield;
+        this.segmentname = segmentname;
     }
 }
 
 function parseBrazilCompanyDTO(data) {
-    const { companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, sectorname, valormercado, earningYield} = data;
-    return new BrazilCompanyDTO(companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, sectorname, valormercado, earningYield);
+    const { companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, sectorname, valormercado, earningYield, segmentname} = data;
+    return new BrazilCompanyDTO(companyid, companyname, ticker, price, vi, percent_more, dy, tagAlong, subsectorname, sectorname, valormercado, earningYield, segmentname);
 }
 
 module.exports = {

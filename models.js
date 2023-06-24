@@ -137,14 +137,6 @@ const brazilCompany = {
     type: Sequelize.FLOAT,
     allowNull: false
   },
-  createdAt: {
-    type: Sequelize.DATE,
-    allowNull: false
-  },
-  updatedAt: {
-    type: Sequelize.DATE,
-    allowNull: false
-  },
   segmentid: {
     type: Sequelize.INTEGER,
     allowNull: false
@@ -320,14 +312,6 @@ const realEstateFunds = {
     type: Sequelize.FLOAT,
     allowNull: false
   },
-  createdAt: {
-    type: Sequelize.DATE,
-    allowNull: false
-  },
-  updatedAt: {
-    type: Sequelize.DATE,
-    allowNull: false
-  },
   segmentid: {
     type: Sequelize.INTEGER,
     allowNull: false
@@ -390,14 +374,6 @@ const user = {
   password: {
     type: Sequelize.STRING,
     allowNull: false,
-  },
-  createdAt: {
-    type: Sequelize.DATE,
-    allowNull: false
-  },
-  updatedAt: {
-    type: Sequelize.DATE,
-    allowNull: false
   },
   email: {
     type: Sequelize.STRING,
@@ -541,14 +517,6 @@ const americanCompany = {
   },
   valormercado: {
     type: Sequelize.FLOAT,
-    allowNull: false
-  },
-  createdAt: {
-    type: Sequelize.DATE,
-    allowNull: false
-  },
-  updatedAt: {
-    type: Sequelize.DATE,
     allowNull: false
   },
   segmentid: {
