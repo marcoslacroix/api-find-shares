@@ -72,11 +72,27 @@ app.post('/api/create-user', async (req, res)  => {
   }
 });
 
-// todo deletar account
+
+app.delete('/api/user/delete', verificarToken, async (req, res) => {
+    try {
+      const decoded = decodeToken(req);
+      const user = await getUserByEmail(decoded.email);
+      await User.destroy({
+        where: {
+          id: user.id
+        }
+      });
+      res.json({ message: 'Usuário excluído com sucesso' });
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      res.status(500).json({ error: 'Ocorreu um erro ao excluir o usuário' });
+    }
+  });
+  
 
 app.post('/api/login', async (req, res)  => {
     const {email, password} = req.body;
-    const user = await User.findOne({ where: { email } });
+    const user = await getUserByEmail(email);
     if (user) {
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (email === user.email && isPasswordMatch) {
@@ -193,9 +209,13 @@ function getTokenFromHeader(req) {
     return req.headers['authorization'];
 }
 
-app.get('/api/get-user', verificarToken, async (req, resp) => {
+function decodeToken(req) {
     const token = getTokenFromHeader(req).replace('Bearer ', '');
-    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    return jwt.verify(token, process.env.SECRET_KEY);
+}
+
+app.get('/api/get-user', verificarToken, async (req, resp) => {
+    const decoded = decodeToken(req);
     const user = await getUserByEmail(decoded.email);
     resp.json(UserDto.parseUserDto(user));
 });
