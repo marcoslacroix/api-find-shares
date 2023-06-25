@@ -566,6 +566,10 @@ const favorite = {
     type: Sequelize.STRING,
     allowNull: true,
   },
+  user: {
+    type: Sequelize.INTEGER,
+    allowNull: true
+  }
 }
 
 const companyHistoric = {

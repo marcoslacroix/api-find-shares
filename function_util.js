@@ -6,6 +6,7 @@ const Company = dataBase.Company;
 const bcrypt = require('bcrypt');
 const CompanyHistoric = dataBase.CompanyHistoric;
 const cache = require('./cache')
+const jwt = require('jsonwebtoken');
 const iconv = require('iconv-lite')
 const toReadableStockPageInfo = require('./toReadableStockPageInfo')
 
@@ -220,7 +221,65 @@ function parseEbitValue(response) {
     }
     return ebit;
 }
+
+class WeakPasswordError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = 'WeakPasswordError';
+    }
+}
+
+function isStrongPassword(password) {
+    if (password.length < 8) {
+      throw new WeakPasswordError('A senha deve ter no mínimo 8 caracteres.');
+    } else if (password.length > 12) {
+        throw new WeakPasswordError('A senha deve ter no máximo 12 caracteres.');
+    }
   
+    const uppercaseRegex = /[A-Z]/;
+    const lowercaseRegex = /[a-z]/;
+    const digitRegex = /[0-9]/;
+    const specialCharRegex = /[^A-Za-z0-9]/;
+    
+    if (!uppercaseRegex.test(password) || !lowercaseRegex.test(password) || !digitRegex.test(password) || !specialCharRegex.test(password)) {
+      throw new WeakPasswordError('A senha deve conter pelo menos uma letra maiúscula, uma letra minúscula, um número e um caractere especial.');
+    }
+  
+    return true;
+}
+
+
+function getTokenFromHeader(req) {
+    return req.headers['authorization'];
+}
+
+
+function decodeToken(req) {
+    const token = getTokenFromHeader(req).replace('Bearer ', '');
+    return jwt.verify(token, process.env.SECRET_KEY);
+}
+  
+function verificarToken(req, res, next) {
+    const authorizationHeader  = getTokenFromHeader(req);
+    let token = "";
+
+    if (authorizationHeader) {
+        token = authorizationHeader.split(' ')[1];
+    }
+  
+    if (!token) {
+        return res.status(401).json({ message: 'Token não fornecido' });
+    }
+  
+    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ message: 'Token inválido' });
+        }
+  
+        req.user = decoded;
+        next();
+    });
+}
 
 module.exports = {
     checkIfItHasNegativeProfitInTheLast10Years,
@@ -234,6 +293,10 @@ module.exports = {
     getProvents,
     isInvalidProvents,
     calculateMedianaValue,
-    encryptPassword
+    encryptPassword,
+    isStrongPassword,
+    verificarToken,
+    getTokenFromHeader,
+    decodeToken
 };
     
