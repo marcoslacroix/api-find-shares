@@ -38,6 +38,32 @@ const createUserSchema = Joi.object({
   lastName: Joi.string().required()
 });
 
+class WeakPasswordError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = 'WeakPasswordError';
+    }
+}
+
+function isStrongPassword(password) {
+    if (password.length < 8) {
+      throw new WeakPasswordError('A senha deve ter no mínimo 8 caracteres.');
+    } else if (password.length > 12) {
+        throw new WeakPasswordError('A senha deve ter no máximo 12 caracteres.');
+    }
+  
+    const uppercaseRegex = /[A-Z]/;
+    const lowercaseRegex = /[a-z]/;
+    const digitRegex = /[0-9]/;
+    const specialCharRegex = /[^A-Za-z0-9]/;
+    
+    if (!uppercaseRegex.test(password) || !lowercaseRegex.test(password) || !digitRegex.test(password) || !specialCharRegex.test(password)) {
+      throw new WeakPasswordError('A senha deve conter pelo menos uma letra maiúscula, uma letra minúscula, um número e um caractere especial.');
+    }
+  
+    return true;
+}
+
 app.post('/api/create-user', async (req, res)  => {
     try {
         const { error, value } = createUserSchema.validate(req.body);
@@ -48,6 +74,8 @@ app.post('/api/create-user', async (req, res)  => {
     }
 
     const { email, password, name, lastName } = value;
+
+    isStrongPassword(password);
 
     const user = await getUserByEmail(email);
 
@@ -67,8 +95,8 @@ app.post('/api/create-user', async (req, res)  => {
 
     res.send("User created!");
   } catch (error) {
+    res.status(500).json({ message: error.message });
     console.error(error);
-    res.status(500).send('Internal server error');
   }
 });
 
