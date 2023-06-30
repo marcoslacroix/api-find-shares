@@ -29,15 +29,15 @@ function getHeaders() {
 
 function checkIfItHasNegativeProfitInTheLast10Years(data) {
     const currentYear = new Date().getFullYear();
-    const yearLimit = currentYear - 10;
-    
+    const yearLimit = currentYear - 5;
+
     for (let i = 0; i < data.length; i++) {
-      
+
       if (data[i].year <= yearLimit) {
         break;
       }
-        
-      if (data[i].lucroLiquido < 0 || data.length < 9) {
+
+      if (data[i].lucroLiquido < 0 || data.length < 4) {
         return true;
       }
     }

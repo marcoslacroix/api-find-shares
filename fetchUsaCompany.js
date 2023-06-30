@@ -18,7 +18,7 @@ functionUtils.getStocksInfo(urlGetStocksInfo).then((results) => {
             functionUtils.getRevenueByCompanyId({ companyid: item.companyid, url: urlGetRevenue }).then((result) => {
                 const wasProfitNegative = functionUtils.checkIfItHasNegativeProfitInTheLast10Years(result);
                 functionUtils.getStockPageInfo({ticker: item.ticker, url: urlGetStockPageInfo}).then((stockPageInfo) => {
-                    if (!wasProfitNegative) {
+                    if (!wasProfitNegative && item.liquidezmediadiaria > 1000000 && item.liquidezmediadiaria != null) {
                         functionUtils.getEbitValueByCompanyId({companyid: item.companyid, url: urlGetEbitValue}).then((response) => {
                             let ebit = functionUtils.parseEbitValue(response);
                             let earningYield = (ebit / stockPageInfo['Valor de firma']) * 100;
@@ -59,6 +59,7 @@ functionUtils.getStocksInfo(urlGetStocksInfo).then((results) => {
         }
       })
       
+      console.log("a")
 
       AmericanCompany.destroy({
         where: {},
@@ -69,6 +70,7 @@ functionUtils.getStocksInfo(urlGetStocksInfo).then((results) => {
         console.error('An error has occurred to delete:', error);
       })
 
+      console.log("b")
       AmericanCompany.bulkCreate(companies).then(() => {
       })
       .catch((error) => {
