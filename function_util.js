@@ -27,17 +27,16 @@ function getHeaders() {
 }
 
 
-function checkIfItHasNegativeProfitInTheLast10Years(data) {
+function checkIfItHasNegativeProfitInTheLast10Years(data, ticker) {
     const currentYear = new Date().getFullYear();
-    const yearLimit = currentYear - 5;
+    const yearLimit = currentYear - 6;
 
     for (let i = 0; i < data.length; i++) {
 
       if (data[i].year <= yearLimit) {
         break;
       }
-
-      if (data[i].lucroLiquido < 0 || data.length < 4) {
+      if (data[i].lucroLiquido < 0 || data.length < 6) {
         return true;
       }
     }
@@ -61,11 +60,16 @@ function getStocksInfo(stocksInfoUrl) {
 
 
 const getRevenueByCompanyId = async ({companyid, url}) => {
-    let urlWithCompanyId = url.replace("${companyid}", companyid);
-    let response = await fetch(urlWithCompanyId, {
-        headers: getHeaders(),
-    })
-    return response.json();
+    try {
+        let urlWithCompanyId = url.replace("${companyid}", companyid);
+        let response = await fetch(urlWithCompanyId, {
+            headers: getHeaders(),
+        })
+        return response.json();
+    } catch(error) {
+        console.error(error);
+    }
+
 }
 
 
@@ -78,11 +82,15 @@ const getRevenue = async ({ticker, url}) => {
 }
 
 const getProvents = async ({companyName, url, ticker}) => {
-    let urlWithCompanyNameAndTicker = url.replace("${ticker}", ticker).replace("${companyName}", companyName);
-    let response = await fetch(urlWithCompanyNameAndTicker, {
-        headers: getHeaders(),
-    })
-    return response.json();
+    try {
+        let urlWithCompanyNameAndTicker = url.replace("${ticker}", ticker).replace("${companyName}", companyName);
+        let response = await fetch(urlWithCompanyNameAndTicker, {
+            headers: getHeaders(),
+        })
+        var json = await response.json();
+        return json;
+    } catch(ignore) {}
+
 }
 
 async function encryptPassword(password) {

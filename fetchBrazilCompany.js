@@ -10,12 +10,12 @@ const urlGetStockPageInfo = 'https://statusinvest.com.br/acoes/${ticker}';
 const urlGetEbitValue = 'https://statusinvest.com.br/acao/getdre?code=${ticker}&type=0&futureData=false';
 
 functionUtils.getStocksInfo(urlGetStocksInfo).then((results) => {
-    console.log("Starting progress...")
+    console.log("Starting progress... ", new Date());
     const promises = results.map((item, i) => {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
             functionUtils.getRevenue({ ticker: item.ticker, url: urlGetRevenue }).then((result) => {
-                const wasProfitNegative = functionUtils.checkIfItHasNegativeProfitInTheLast10Years(result);
+                const wasProfitNegative = functionUtils.checkIfItHasNegativeProfitInTheLast10Years(result, item.ticker);
                 functionUtils.getStockPageInfo({ticker: item.ticker, url: urlGetStockPageInfo}).then((stockPageInfo) => {
                     if ((stockPageInfo.tagAlong === '100 %' || stockPageInfo.tagAlong === '80 %')  && !wasProfitNegative && item.liquidezmediadiaria > 1000000 && item.liquidezmediadiaria != null && item.margemebit > 0) {
                       functionUtils.getEbitValue({ticker: item.ticker, url: urlGetEbitValue}).then((response) => {
@@ -66,13 +66,28 @@ functionUtils.getStocksInfo(urlGetStocksInfo).then((results) => {
         console.error('An error has occurred to delete:', error);
       })
 
-      BrazilCompany.bulkCreate(companies).then(() => {
+      const newList = [];
+
+
+      // se tiver empresa repetida, pega a que tiver a liquidezmediadiaria maior
+      companies.forEach(item => {
+          const existingItemIndex = newList.findIndex(newItem => newItem.companyname === item.companyname);
+          if (existingItemIndex !== -1) {
+              if (item.liquidezmediadiaria > newList[existingItemIndex].liquidezmediadiaria) {
+                  newList[existingItemIndex] = item;
+              }
+          } else {
+              newList.push(item);
+          }
+      });
+
+      BrazilCompany.bulkCreate(newList).then(() => {
       })
       .catch((error) => {
         console.error('An error has occurred to insert:', error);
       });
 
-      console.log("Process end.");
+      console.log("Process end. ", new Date());
       
     });
   })

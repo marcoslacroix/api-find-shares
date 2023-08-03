@@ -8,11 +8,15 @@ const functionUtils = require('./function_util');
 
 
 functionUtils.getStocksInfo(urlSearch).then((results) => {
-    console.log("Starting progress...")
+    console.log("Starting progress... ", new Date())
     const promises = results.map((item, i) => {
       return new Promise((resolve, reject) => {
             setTimeout(() => {
-                functionUtils.getProvents({ companyName: item.companyName, url: urlGetProvents, ticker: item.ticker }).then((result) => {
+                if (item.companyname && item.ticker) {
+                  functionUtils.getProvents({ companyName: item.companyname, url: urlGetProvents, ticker: item.ticker }).then((result) => {
+                    if (!result){
+                      return;
+                    }
                     const invalidProvent = functionUtils.isInvalidProvents(result, item.ticker);
                     if (!invalidProvent && item.sectorname !== "Fundo Misto") {
                         
@@ -26,6 +30,7 @@ functionUtils.getStocksInfo(urlSearch).then((results) => {
                   console.error('An error has occurred: ', error);
                   reject("error");
                 });
+                }
             }, i * 1000);
       });
     });
@@ -61,7 +66,7 @@ functionUtils.getStocksInfo(urlSearch).then((results) => {
           console.error('An error has occurred to insert:', error);
         });
   
-        console.log("Process end.");
+        console.log("Process end.", new Date());
       
     });
 })
