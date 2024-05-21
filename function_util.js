@@ -27,19 +27,21 @@ function getHeaders() {
 }
 
 
-function checkIfItHasNegativeProfitInTheLast10Years(data, ticker) {
+function checkIfItHasNegativeProfitInTheLast10Years(data, ticker, checkNegativeProfit = true) {
     const currentYear = new Date().getFullYear();
-    const yearLimit = currentYear - 6;
+    const yearLimit = currentYear - 10;
 
-    for (let i = 0; i < data.length; i++) {
-
-      if (data[i].year <= yearLimit) {
-        break;
-      }
-      if (data[i].lucroLiquido < 0 || data.length < 6) {
-        return true;
-      }
+    if (checkNegativeProfit) {
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].year <= yearLimit) {
+                break;
+            }
+            if (data[i].lucroLiquido < 0 || data.length < 10) {
+                return true;
+            }
+        }
     }
+    
     return false; 
 }
 
@@ -58,38 +60,78 @@ function getStocksInfo(stocksInfoUrl) {
     });
 }
 
-
-const getRevenueByCompanyId = async ({companyid, url}) => {
+const getRevenueByCompanyId = async ({companyid, url,  count = 0}) => {
     try {
+        count++;
         let urlWithCompanyId = url.replace("${companyid}", companyid);
         let response = await fetch(urlWithCompanyId, {
+            headers: {
+                accept: '*/*',
+                'accept-language': 'en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7,es-MX;q=0.6,es;q=0.5',
+                'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'x-requested-with': 'XMLHttpRequest',
+                'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="97", "Chromium";v="97"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"macOS"',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)'
+            }
+        });
+        if (response) {
+            const responseBody = await response.text(); // Get the response body as text
+    
+            // Now attempt to parse JSON
+            const jsonData = JSON.parse(responseBody);
+            return jsonData;
+        }
+
+    
+    } catch(e) {
+        if (count < 5) {
+            await new Promise(r => setTimeout(r, 1000 * count));
+            return await getRevenue({ticker, url, count})
+        }
+        throw e;
+    }
+}
+
+const getRevenue = async ({ticker, url, count = 0}) => {
+    try{
+        count++;
+        let urlWithTicker = url.replace("${ticker}", ticker);
+        let response = await fetch(urlWithTicker, {
             headers: getHeaders(),
         })
-        return response.json();
-    } catch(error) {
-        console.error(error);
+        return await response.json();
+    } catch (e) {
+        if (count < 5) {
+            await new Promise(r => setTimeout(r, 1000 * count));
+            return await getRevenue({ticker, url, count})
+        }
+        throw e;
     }
 
 }
 
-
-const getRevenue = async ({ticker, url}) => {
-    let urlWithTicker = url.replace("${ticker}", ticker);
-    let response = await fetch(urlWithTicker, {
-        headers: getHeaders(),
-    })
-    return response.json();
-}
-
-const getProvents = async ({companyName, url, ticker}) => {
+const getProvents = async ({url, item, count = 0}) => {
     try {
-        let urlWithCompanyNameAndTicker = url.replace("${ticker}", ticker).replace("${companyName}", companyName);
+        count++;
+        let urlWithCompanyNameAndTicker = url.replace("${ticker}", item.ticker).replace("${companyName}", encodeURIComponent(item.companyname));
+
         let response = await fetch(urlWithCompanyNameAndTicker, {
             headers: getHeaders(),
         })
-        var json = await response.json();
-        return json;
-    } catch(ignore) {}
+        return await response.json();
+    } catch(e) {
+        if (count < 5) {
+            await new Promise(r => setTimeout(r, 1000 * count));
+            return await getProvents({url, item, count})
+        }
+        throw e;
+        
+    }
 
 }
 
@@ -100,7 +142,6 @@ async function encryptPassword(password) {
       const hash = await bcrypt.hash(password, salt);
       return hash;
     } catch (error) {
-      console.error(error);
       throw error;
     }
 }
@@ -140,14 +181,14 @@ function calculateMedianaValue(result) {
     return mediana;
 }
 
-function isInvalidProvents(result, ticker) {
+function isInvalidProvents(result, item) {
     const dataAtual = new Date();
     const mesAtual = dataAtual.getMonth() + 1; // Os meses em JavaScript são baseados em zero
     const anoAtual = dataAtual.getFullYear();
     const anoAnterior = anoAtual - 1;
 
     if (result.assetEarningsModels.length < 12) {
-        //console.log(`FIIS com idade inferior a 1 ano ${ticker}`);
+        console.log(`FIIS com idade inferior a 1 ano ${item.ticker}`);
         return true;
     }
   
@@ -162,7 +203,7 @@ function isInvalidProvents(result, ticker) {
       });
   
       if (!registroExiste) {
-        //console.log(`Não existe registro para o mês ${mesAno}, ${ticker}`);
+        console.log(`Não existe registro para o mês ${mesAno}, ${item.ticker}`);
         return true;
       }
     }
@@ -178,7 +219,7 @@ function isInvalidProvents(result, ticker) {
       });
   
       if (!registroExiste) {
-        //console.log(`Não existe registro para o mês ${mesAno}, ${ticker}`);
+        console.log(`Não existe registro para o mês ${mesAno}, ${item.ticker}`);
         return true;
       }
     }
@@ -187,47 +228,100 @@ function isInvalidProvents(result, ticker) {
   }
   
 
-const getStockPageInfo = async ({ ticker, url }) => {
-    let urlWithTicker = url.replace('${ticker}', ticker);
-    const response = await fetch(urlWithTicker, {
-      headers: {
-        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'accept-language': 'en,en-US;q=0.9,pt-BR;q=0.8,pt;q=0.7,es-MX;q=0.6,es;q=0.5'
-      }
-    })
-    const responseBuffer = await response.buffer()
-    const html = iconv.encode(responseBuffer, 'utf8').toString('utf8')
-  
-    return toReadableStockPageInfo(html);
-}
-
-const getEbitValueByCompanyId = async ({companyid, url}) => {
-    let urlWithCompanyId = url.replace('${companyid}', companyid);
-    let response = await fetch(urlWithCompanyId, {
-        headers: getHeaders(),
-    })
-    return response.json();
-}
-
-const getEbitValue = async ({ticker, url}) => {
-    let urlWithTicker = url.replace('${ticker}', ticker);
-    let response = await fetch(urlWithTicker, {
-        headers: getHeaders(),
-    })
-    return response.json();
-}
-
-function parseEbitValue(response) {
-    let stringEbit = response?.data?.grid[7]?.columns[1]?.value;
-    let ebit = 0;
-    if (stringEbit.includes('M')) {
-        ebit = parseFloat(stringEbit.replace('.', '').replace(',', '.')) * 1000000;
-    } else if (stringEbit.includes('B')) {
-        ebit = parseFloat(stringEbit.replace(/\./g, '').replace(',', '.')) * 1000000000;
-    } else {
-        ebit = parseFloat(stringEbit.replace(/\./g, '').replace(',', '.'));
+const getStockPageInfo = async ({ ticker, url, count = 0 }) => {
+    try {
+        count++;
+        let urlWithTicker = url.replace('${ticker}', ticker);
+        const response = await fetch(urlWithTicker, {
+            headers: {
+            accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'accept-language': 'en,en-US;q=0.9,pt-BR;q=0.8,pt;q=0.7,es-MX;q=0.6,es;q=0.5'
+            }
+        })
+        const responseBuffer = await response.buffer()
+        const html = iconv.encode(responseBuffer, 'utf8').toString('utf8')
+        
+        return toReadableStockPageInfo(html);
+    } catch(e) {
+        if (count < 5) {
+            await new Promise(r => setTimeout(r, 1000 * count));
+            return await getStockPageInfo({ticker, url, count})
+        }
+        throw e;
     }
-    return ebit;
+   
+}
+
+const getEbitValueByCompanyId = async ({companyid, url, count = 0}) => {
+    try {
+        count++;
+        let urlWithCompanyId = url.replace('${companyid}', companyid);
+        let response = await fetch(urlWithCompanyId, {
+            headers: {
+                accept: '*/*',
+                'accept-language': 'en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7,es-MX;q=0.6,es;q=0.5',
+                'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'x-requested-with': 'XMLHttpRequest',
+                'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="97", "Chromium";v="97"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"macOS"',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)'
+            }
+        })
+        if (response) {
+            const responseBody = await response.text(); // Get the response body as text    
+            // Now attempt to parse JSON
+            const jsonData = JSON.parse(responseBody);
+            return jsonData;
+        }
+    } catch(e) {
+        if (count < 5) {
+            await new Promise(r => setTimeout(r, 1000 * count));
+            return await getEbitValueByCompanyId({companyid, url, count})
+        }
+        throw e;
+    }
+
+}
+
+const getEbitValue = async ({ticker, url, count = 0}) => {
+    try {
+        count++;
+        let urlWithTicker = url.replace('${ticker}', ticker);
+        let response = await fetch(urlWithTicker, {
+            headers: getHeaders(),
+        })
+        return response.json();
+    } catch(e) {
+        if (count < 5) {
+            await new Promise(r => setTimeout(r, 1000 * count));
+            return await getEbitValue({ticker, url, count})
+        }
+        throw e;
+    }
+
+}
+
+function parseEbitValue(response, count = 0) {
+    try {
+        count++;
+        let stringEbit = response?.data?.grid[7]?.columns[1]?.value;
+        let ebit = 0;
+        if (stringEbit.includes('M')) {
+            ebit = parseFloat(stringEbit.replace('.', '').replace(',', '.')) * 1000000;
+        } else if (stringEbit.includes('B')) {
+            ebit = parseFloat(stringEbit.replace(/\./g, '').replace(',', '.')) * 1000000000;
+        } else {
+            ebit = parseFloat(stringEbit.replace(/\./g, '').replace(',', '.'));
+        }
+        return ebit;
+    } catch (e) {
+        throw e;
+    }
+    
 }
 
 class WeakPasswordError extends Error {

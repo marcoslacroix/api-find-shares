@@ -29,10 +29,17 @@ const User = db.define('user', models.user, {
     freezeTableName: true,
     timestamps: false
 });
-const CompanyHistoric = db.define('company_historic', models.companyHistoric, {
+
+const BrazilCompanyHistoric = db.define('brazil_company_historic', models.brazilCmpanyhistoric, {
     freezeTableName: true,
     timestamps: false,
-    tableName: 'company_historic'
+    tableName: 'brazil_company_historic'
 });
 
-module.exports = {BrazilCompany, Favorite, CompanyHistoric, AmericanCompany, RealEstateFunds, User}
+const RealEstateFundsHistoric = db.define('real_estate_funds_historic', models.realEstateFundshistoric, {
+    freezeTableName: true,
+    timestamps: false,
+    tableName: 'real_estate_funds_historic'
+});
+
+module.exports = {BrazilCompany, Favorite, AmericanCompany, RealEstateFunds, User, BrazilCompanyHistoric, RealEstateFundsHistoric}

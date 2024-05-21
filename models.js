@@ -21,6 +21,14 @@ const brazilCompany = {
     type: Sequelize.FLOAT,
     allowNull: false
   },
+  limitToInvest: {
+    type: Sequelize.FLOAT,
+    allowNull: false
+  },
+  quantidade: {
+    type: Sequelize.FLOAT,
+    allowNull: false
+  },
   p_l: {
     type: Sequelize.FLOAT,
     allowNull: false
@@ -175,6 +183,44 @@ const brazilCompany = {
 
 }
 
+const brazilCmpanyhistoric = {
+  id: {
+    type: Sequelize.INTEGER,
+    primaryKey: true
+  },
+  old: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  new: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  created_at: {
+    type: Sequelize.DATE,
+    allowNull: false
+  }
+}
+
+const realEstateFundshistoric = {
+  id: {
+    type: Sequelize.INTEGER,
+    primaryKey: true
+  },
+  old: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  new: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  created_at: {
+    type: Sequelize.DATE,
+    allowNull: false
+  }
+}
+
 const realEstateFunds = {
   id: {
     type: Sequelize.INTEGER,
@@ -186,6 +232,14 @@ const realEstateFunds = {
   },
   companyname: {
     type: Sequelize.STRING,
+    allowNull: false
+  },
+  limitToInvest: {
+    type: Sequelize.FLOAT,
+    allowNull: false
+  },
+  quantidade: {
+    type: Sequelize.FLOAT,
     allowNull: false
   },
   ticker: {
@@ -239,6 +293,10 @@ const realEstateFunds = {
   },
   magicNumber: {
     type: Sequelize.FLOAT,
+    allowNull: true
+  },
+  totalImoveis: {
+    type: Sequelize.INTEGER,
     allowNull: true
   }
 
@@ -458,16 +516,6 @@ const favorite = {
   }
 }
 
-const companyHistoric = {
-  id: {
-    type: Sequelize.INTEGER,
-    primaryKey: true
-  },
-  ticker: {
-    type: Sequelize.STRING,
-    allowNull: true,
-  },
-}
 
 
-module.exports = {brazilCompany, favorite, companyHistoric, americanCompany, realEstateFunds, user};
+module.exports = {brazilCompany, favorite, americanCompany, realEstateFunds, user, brazilCmpanyhistoric, realEstateFundshistoric};

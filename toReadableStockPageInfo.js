@@ -1,5 +1,6 @@
 const cheerio = require('cheerio')
 const moment = require('moment')
+const fs = require('fs');
 
 const getSectorSubSectorAndSegmentInfo = ({ html, stockInfo }) => {
   const $ = cheerio.load(html)
@@ -103,19 +104,39 @@ const getInvestorsTableInfo = ({ html, stockInfo }) => {
   })
 }
 
+const getPortifolio = ({ html, stockInfo }) => {
+  try {
+    const $ = cheerio.load(html)
+
+
+    const totalImoveis = $('.portfolio-properties').find('.card-list-box').find('.list').find('.property');
+
+
+    stockInfo.totalImoveis = totalImoveis.length;
+  } catch(err){
+    console.error(err);
+  }
+  
+}
+
 const getEarningsTableInfo = ({ html, stockInfo }) => {
-  const $ = cheerio.load(html)
-  const input = $('#earning-section input#results')
-  const earnings = JSON.parse(input.val())
-  stockInfo.Proventos = earnings.map((earning) => {
-    return {
-      Tipo: earning.et,
-      ValorOriginal: earning.v,
-      ValorEventoDesdobramentoAgrupamento: earning.ov || earning.v,
-      DataCom: moment(earning.ed, 'DD/MM/YYYY').format('YYYY-MM-DD'),
-      DataPagamento: moment(earning.pd, 'DD/MM/YYYY').format('YYYY-MM-DD')
-    }
-  })
+  try {
+    const $ = cheerio.load(html)
+    const input = $('#earning-section input#results')
+    const earnings = JSON.parse(input.val())
+    stockInfo.Proventos = earnings.map((earning) => {
+      return {
+        Tipo: earning.et,
+        ValorOriginal: earning.v,
+        ValorEventoDesdobramentoAgrupamento: earning.ov || earning.v,
+        DataCom: moment(earning.ed, 'DD/MM/YYYY').format('YYYY-MM-DD'),
+        DataPagamento: moment(earning.pd, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      }
+    })
+  } catch(err){
+    console.error(err);
+  }
+  
 }
 
 const fromBrToBoolean = (value) => {
@@ -154,6 +175,7 @@ const toReadableStockPageInfo = (html) => {
   getInvestorsTableInfo({ html, stockInfo })
   getTagAlong({html, stockInfo})
   getEarningsTableInfo({ html, stockInfo })
+  getPortifolio({ html, stockInfo })
   return stockInfo
 }
 module.exports = toReadableStockPageInfo

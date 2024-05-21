@@ -1,7 +1,6 @@
 let companies = [];
 const dataBase = require('./data-base');
 const AmericanCompany = dataBase.AmericanCompany;
-const CompanyHistoric = dataBase.CompanyHistoric;
 const functionUtils = require('./function_util');
 //const urlGetStocksInfo = 'https://statusinvest.com.br/category/advancedsearchresultpaginated?search=%7B%22Sector%22%3A%22%22%2C%22SubSector%22%3A%22%22%2C%22Segment%22%3A%22%22%2C%22my_range%22%3A%22-20%3B100%22%2C%22forecast%22%3A%7B%22upsidedownside%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22estimatesnumber%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22revisedup%22%3Atrue%2C%22reviseddown%22%3Atrue%2C%22consensus%22%3A%5B%5D%7D%2C%22dy%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_l%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22peg_ratio%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_vp%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_ativo%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22margembruta%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22margemebit%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22margemliquida%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_ebit%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22ev_ebit%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22dividaliquidaebit%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22dividaliquidapatrimonioliquido%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_sr%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_capitalgiro%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22p_ativocirculante%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22roe%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22roic%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22roa%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22liquidezcorrente%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22pl_ativo%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22passivo_ativo%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22giroativos%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22receitas_cagr5%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22lucros_cagr5%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22liquidezmediadiaria%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22vpa%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22lpa%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%2C%22valormercado%22%3A%7B%22Item1%22%3Anull%2C%22Item2%22%3Anull%7D%7D&orderColumn=&isAsc=&page=0&take=6174&CategoryType=12'
 // filtro pl 0 a 15, p/vp 0 a 2
@@ -10,80 +9,67 @@ const urlGetRevenue = 'https://statusinvest.com.br/stock/getrevenuechart?company
 const urlGetStockPageInfo = 'https://statusinvest.com.br/acoes/eua/${ticker}';
 const urlGetEbitValue = 'https://statusinvest.com.br/stock/getincomestatment?companyid=${companyid}&type=0&futureData=false';
 
+const checkNegativeProfit = true;
 
+async function processCompanies() {
+  try {
+    console.log("Starting progress...", new Date());
 
-functionUtils.getStocksInfo(urlGetStocksInfo).then((results) => {
-    console.log("Starting progress... ", new Date());
-    const promises = results.map((item, i) => {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            functionUtils.getRevenueByCompanyId({ companyid: item.companyid, url: urlGetRevenue }).then((result) => {
-                const wasProfitNegative = functionUtils.checkIfItHasNegativeProfitInTheLast10Years(result);
-                functionUtils.getStockPageInfo({ticker: item.ticker, url: urlGetStockPageInfo}).then((stockPageInfo) => {
-                    if (!wasProfitNegative && item.margemebit > 0 && item.dy) {
-                        functionUtils.getEbitValueByCompanyId({companyid: item.companyid, url: urlGetEbitValue}).then((response) => {
-                            let ebit = functionUtils.parseEbitValue(response);
-                            let earningYield = (ebit / stockPageInfo['Valor de firma']) * 100;
-                            if (earningYield > 0) {
-                                let vi = Math.sqrt(22.5 * item.lpa * item.vpa);
-                                item.vi = vi;
-                                item.percent_more = ((vi - item.price) / item.price) * 100
-                                item.earningYield = earningYield
-                                if (item.price < vi) {
-                                    console.log("item adicionado: ");
-                                    companies.push(item);
-                                }
-                            }
-                        })
-                    }
-                    resolve("teste");
-                })
-            })
-            .catch((error) => {
-              console.error('An error has occurred: ', error);
-              reject("error");
+    const results = await functionUtils.getStocksInfo(urlGetStocksInfo);
+    
+    const companies = [];
+
+    await Promise.all(results.map(async (item, i) => {
+      await new Promise(resolve => setTimeout(resolve, i * 2000));
+
+      if (item.sectorname !== "Financeiro e Outros") {
+        const result = await functionUtils.getRevenueByCompanyId({
+          companyid: item.companyid,
+          url: urlGetRevenue
+        });
+
+        const wasProfitNegative = result && functionUtils.checkIfItHasNegativeProfitInTheLast10Years(result, checkNegativeProfit);
+
+        if (!wasProfitNegative && item.margemebit > 0 && item.dy && item.liquidezmediadiaria > 1000000 && item.margemebit > 0   ) {
+          const stockPageInfo = await functionUtils.getStockPageInfo({
+            ticker: item.ticker,
+            url: urlGetStockPageInfo
+          });
+
+          if (stockPageInfo && stockPageInfo['Valor de firma']) {
+            const response = await functionUtils.getEbitValueByCompanyId({
+              companyid: item.companyid,
+              url: urlGetEbitValue
             });
-        }, i * 1000);
-      });
-    });
 
-    Promise.all(promises).then(async () => {
+            const ebit = functionUtils.parseEbitValue(response);
+            const earningYield = (ebit / stockPageInfo['Valor de firma']) * 100;
 
-      const companyHistoric = await CompanyHistoric.findAll({});
-      const companiesNewList = [];
+            if (earningYield > 0) {
+              const vi = Math.sqrt(22.5 * item.lpa * item.vpa);
+              const percentMore = ((vi - item.price) / item.price) * 100;
 
-      companies.forEach(it => {
-        const ticker = it.ticker;
-        const isTickerOnHistoric = companyHistoric.some(companyHistoric => companyHistoric.ticker === ticker);
-        if(!isTickerOnHistoric) {
-          CompanyHistoric.create({
-            ticker
-          })
+              companies.push({
+                ...item,
+                vi,
+                percent_more: percentMore,
+                earningYield
+              });
+            }
+          }
         }
-      })
-      
-      AmericanCompany.destroy({
-        where: {},
-      })
-      .then((rowsDeleted) => {
-      })
-      .catch((error) => {
-        console.error('An error has occurred to delete:', error);
-      })
+      }
+    }));
 
 
+    await AmericanCompany.destroy({ where: {} });
 
-      AmericanCompany.bulkCreate(companies).then(() => {
-      })
-      .catch((error) => {
-        console.error('An error has occurred to insert:', error);
-      });
+    await AmericanCompany.bulkCreate(companies);
 
-      console.log("Process end. ", new Date());
-      
-    });
-})
-.catch((error) => {
-    console.error('An error has occurred: ', error);
-});
+    console.log("Process end.", new Date());
+  } catch (error) {
+    console.error('An error has occurred:', error);
+  }
+}
 
+processCompanies();
