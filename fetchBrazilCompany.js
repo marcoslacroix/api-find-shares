@@ -30,7 +30,6 @@ functionUtils.getStocksInfo(urlGetStocksInfo).then((results) => {
           setTimeout(() => {
               functionUtils.getRevenue({ ticker: item.ticker, url: urlGetRevenue }).then((result) => {
                   const wasProfitNegative = functionUtils.checkIfItHasNegativeProfitInTheLast10Years(result, item.ticker, checkNegativeProfit);
-                  const teste = await functionUtils.getStockPageInfo({ticker: item.ticker, url: urlGetStockPageInfo});
                   functionUtils.getStockPageInfo({ticker: item.ticker, url: urlGetStockPageInfo}).then((stockPageInfo) => {
                       if ((stockPageInfo.tagAlong === '100 %' || stockPageInfo.tagAlong === '80 %')  && 
                           !wasProfitNegative && 

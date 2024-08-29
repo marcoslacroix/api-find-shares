@@ -40,19 +40,19 @@ const createUserSchema = Joi.object({
 function getLimitToInvestBrazilCompanies(totalValue, index) {
     let limitToInvest = 0;
     if (index < 3) {
-        limitToInvest = totalValue * 0.13 / 3;
+        limitToInvest = totalValue * 0.13;
     } else if (index < 5) {
-        limitToInvest = totalValue * 0.12 / 2;
+        limitToInvest = totalValue * 0.12;
     } else if (index < 8) {
-        limitToInvest = totalValue * 0.06 / 3;
+        limitToInvest = totalValue * 0.06;
     } else if (index < 10) {
-        limitToInvest = totalValue * 0.035 / 2;
+        limitToInvest = totalValue * 0.035;
     } else if (index < 13) {
-        limitToInvest = totalValue * 0.02 / 3;
+        limitToInvest = totalValue * 0.02;
     } else if (index < 15) {
-        limitToInvest = totalValue * 0.015 / 2;
+        limitToInvest = totalValue * 0.015;
     } else if (index < 20) {
-        limitToInvest = totalValue * 0.01 / 1;
+        limitToInvest = totalValue * 0.01;
     } 
 
     return limitToInvest;
@@ -67,7 +67,7 @@ function parseBrazilCompaniesDtoCsv(companies, totalValue) {
         const dto = {
             nome: value.companyname,
             ticker: value.ticker,
-            valorMaximo: valorMaximo.toFixed(2),
+            valorMaximo: (quantidade * value.price).toFixed(2),
             quantidade: quantidade,
             p_vp: value.p_vp,
             valorAtual: value.price,
@@ -83,13 +83,13 @@ function parseBrazilCompaniesDtoCsv(companies, totalValue) {
 function getLimitToInvestRealEstateFunds(totalValue, index) {
     let limitToInvest = 0;
     if (index < 3) {
-        limitToInvest = totalValue * 0.35 / 3; // 291 * 3 = 875
+        limitToInvest = totalValue * 0.11
     } else if (index < 5) {
-        limitToInvest = totalValue * 0.25 / 2; // 375 * 2 = 750
+        limitToInvest = totalValue * 0.05 
     } else if (index < 8) {
-        limitToInvest = totalValue * 0.25 / 3; // 208 * 3  = 625
+        limitToInvest = totalValue * 0.08
     } else if (index < 10) {
-        limitToInvest = totalValue * 0.10 / 2; // 125  = 250
+        limitToInvest = totalValue * 0.05 
     } 
 
     return limitToInvest;
@@ -104,11 +104,11 @@ function parseRealEstateFundsDtoCsv(companies, totalValue) {
         const dto = {
             nome: value.companyname,
             ticker: value.ticker,
-            valorMaximo: valorMaximo.toFixed(2),
+            valorMaximo: (quantidade * value.price).toFixed(2),
             quantidade: quantidade,
             p_vp: value.p_vp,
             valorAtual: value.price,
-            comprar: value.p_vp < 1 && quantidade > 0 ? 'Sim' : 'Não'
+            comprar: value.p_vp < 1.1 && quantidade > 0 ? 'Sim' : 'Não'
 
         }
         dtos.push(dto);
